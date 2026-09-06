@@ -1,0 +1,1170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GigWorker Connect - MongoDB Integrated</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --secondary: #10b981;
+        --accent: #f59e0b;
+        --dark: #1e293b;
+        --light: #f8fafc;
+        --gray: #64748b;
+        --border: #e2e8f0;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--light);
+        color: var(--dark);
+        line-height: 1.6;
+      }
+      .header {
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
+        color: white;
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      .header-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .logo {
+        font-size: 1.8rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .nav-buttons {
+        display: flex;
+        gap: 1rem;
+      }
+      .btn {
+        padding: 0.6rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        font-size: 0.95rem;
+      }
+      .btn-primary {
+        background: white;
+        color: var(--primary);
+      }
+      .btn-primary:hover {
+        background: var(--light);
+        transform: translateY(-2px);
+      }
+      .btn-secondary {
+        background: var(--secondary);
+        color: white;
+      }
+      .btn-secondary:hover {
+        background: #059669;
+      }
+      .btn-accent {
+        background: var(--accent);
+        color: white;
+      }
+      .btn-accent:hover {
+        background: #d97706;
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .hero {
+        text-align: center;
+        padding: 3rem 0;
+        background: white;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+      .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--primary);
+      }
+      .hero p {
+        font-size: 1.2rem;
+        color: var(--gray);
+        max-width: 600px;
+        margin: 0 auto 2rem;
+      }
+      .service-selector {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+      .service-selector h2 {
+        margin-bottom: 1.5rem;
+        color: var(--dark);
+      }
+      .service-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .service-card {
+        background: var(--light);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .service-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.1);
+      }
+      .service-card.selected {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+      .service-card i {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+      .service-card span {
+        font-weight: 600;
+      }
+      .location-input {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        position: relative;
+      }
+      .location-input input {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+      .location-input input:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+      .map-section {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+      .map-container {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        position: relative;
+      }
+      #map {
+        height: 500px;
+        width: 100%;
+      }
+      .workers-panel {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        max-height: 500px;
+        overflow-y: auto;
+      }
+      .workers-panel h3 {
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border);
+      }
+      .worker-card {
+        background: var(--light);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--primary);
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .worker-card:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .worker-card.assigned {
+        border-left-color: var(--secondary);
+        background: #ecfdf5;
+      }
+      .worker-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+      .worker-name {
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+      .worker-rating {
+        color: var(--accent);
+      }
+      .worker-details {
+        font-size: 0.9rem;
+        color: var(--gray);
+        margin-bottom: 0.5rem;
+      }
+      .worker-association {
+        background: var(--primary);
+        color: white;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        display: inline-block;
+      }
+      .worker-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--secondary);
+      }
+      .status-dot.busy {
+        background: var(--accent);
+      }
+      .registration-section {
+        display: none;
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+      .registration-section.active {
+        display: block;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      .form-group label {
+        font-weight: 600;
+        color: var(--dark);
+      }
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        padding: 0.8rem;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+      .form-group input:focus,
+      .form-group textarea:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+      .stats-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+      }
+      .stat-label {
+        color: var(--gray);
+        font-size: 1rem;
+      }
+      .success-message {
+        background: #ecfdf5;
+        border: 2px solid var(--secondary);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        display: none;
+      }
+      .success-message.active {
+        display: block;
+      }
+      .success-message i {
+        color: var(--secondary);
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+      .error-message {
+        background: #fef2f2;
+        border: 2px solid #ef4444;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        display: none;
+      }
+      .error-message.active {
+        display: block;
+      }
+      .error-message i {
+        color: #ef4444;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 0.5rem;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      .modal-header h3 {
+        font-size: 1.5rem;
+      }
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--gray);
+      }
+      .location-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 999;
+        font-weight: 600;
+        color: var(--primary);
+        display: none;
+      }
+      .location-badge.active {
+        display: block;
+      }
+      @media (max-width: 768px) {
+        .map-section {
+          grid-template-columns: 1fr;
+        }
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+        .header-content {
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .nav-buttons {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <i class="fas fa-users-cog"></i> GigWorker Connect
+        </div>
+        <div class="nav-buttons">
+          <button class="btn btn-primary" onclick="showSection('home')">
+            <i class="fas fa-home"></i> Home
+          </button>
+          <button
+            class="btn btn-secondary"
+            onclick="showSection('register-association')"
+          >
+            <i class="fas fa-building"></i> Register Association
+          </button>
+          <button
+            class="btn btn-accent"
+            onclick="showSection('register-worker')"
+          >
+            <i class="fas fa-user-plus"></i> Worker Registration
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div id="home-section">
+        <section class="hero">
+          <h1>Find Local Gig Workers Instantly</h1>
+          <p>
+            Connect with verified professionals through registered associations
+          </p>
+        </section>
+
+        <section class="stats-section">
+          <div class="stat-card">
+            <div class="stat-number" id="total-workers">-</div>
+            <div class="stat-label">Active Workers</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="total-associations">-</div>
+            <div class="stat-label">Registered Associations</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="completed-jobs">-</div>
+            <div class="stat-label">Jobs Completed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="happy-customers">-</div>
+            <div class="stat-label">Satisfaction Rate</div>
+          </div>
+        </section>
+
+        <section class="service-selector">
+          <h2><i class="fas fa-search"></i> What service do you need?</h2>
+          <div class="service-grid">
+            <div
+              class="service-card"
+              data-service="electrician"
+              onclick="selectService('electrician')"
+            >
+              <i class="fas fa-bolt"></i><span>Electrician</span>
+            </div>
+            <div
+              class="service-card"
+              data-service="plumber"
+              onclick="selectService('plumber')"
+            >
+              <i class="fas fa-faucet"></i><span>Plumber</span>
+            </div>
+            <div
+              class="service-card"
+              data-service="carpenter"
+              onclick="selectService('carpenter')"
+            >
+              <i class="fas fa-hammer"></i><span>Carpenter</span>
+            </div>
+            <div
+              class="service-card"
+              data-service="painter"
+              onclick="selectService('painter')"
+            >
+              <i class="fas fa-paint-roller"></i><span>Painter</span>
+            </div>
+            <div
+              class="service-card"
+              data-service="mechanic"
+              onclick="selectService('mechanic')"
+            >
+              <i class="fas fa-wrench"></i><span>Mechanic</span>
+            </div>
+            <div
+              class="service-card"
+              data-service="cleaner"
+              onclick="selectService('cleaner')"
+            >
+              <i class="fas fa-broom"></i><span>Cleaner</span>
+            </div>
+          </div>
+          <div class="location-input">
+            <input
+              type="text"
+              id="location-input"
+              placeholder="Enter your location (e.g., Delhi, Mumbai, Bangalore)"
+            />
+            <button class="btn btn-primary" onclick="findWorkers()">
+              <i class="fas fa-search"></i> Find Workers
+            </button>
+          </div>
+        </section>
+
+        <section class="map-section">
+          <div class="map-container">
+            <div id="map"></div>
+            <div class="location-badge" id="location-badge">
+              <i class="fas fa-map-marker-alt"></i>
+              <span id="current-location">Location</span>
+            </div>
+          </div>
+          <div class="workers-panel">
+            <h3><i class="fas fa-users"></i> Available Workers</h3>
+            <div id="workers-list">
+              <p style="color: var(--gray); text-align: center; padding: 2rem">
+                Select a service and location to find workers
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="register-association-section" class="registration-section">
+        <h2><i class="fas fa-building"></i> Register Your Association</h2>
+        <p style="color: var(--gray); margin-bottom: 2rem">
+          Data will be saved to MongoDB
+        </p>
+
+        <form id="association-form" onsubmit="registerAssociation(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Association Name *</label
+              ><input type="text" name="name" required />
+            </div>
+            <div class="form-group">
+              <label>Registration Number *</label
+              ><input type="text" name="registrationNumber" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Contact Person *</label
+              ><input type="text" name="contactPerson" required />
+            </div>
+            <div class="form-group">
+              <label>Phone Number *</label
+              ><input type="tel" name="phone" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email Address *</label
+            ><input type="email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label>Address *</label
+            ><textarea name="address" rows="3" required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>City *</label><input type="text" name="city" required />
+            </div>
+            <div class="form-group">
+              <label>State *</label><input type="text" name="state" required />
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="btn btn-secondary"
+            style="width: 100%"
+            id="assoc-submit-btn"
+          >
+            <i class="fas fa-check"></i> Register Association
+          </button>
+        </form>
+
+        <div id="association-success" class="success-message">
+          <i class="fas fa-check-circle"></i>
+          <h3>Registration Successful!</h3>
+          <p>Saved to MongoDB</p>
+        </div>
+        <div id="association-error" class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <h3>Registration Failed</h3>
+          <p id="association-error-msg"></p>
+        </div>
+      </div>
+
+      <div id="register-worker-section" class="registration-section">
+        <h2><i class="fas fa-user-plus"></i> Register as a Worker</h2>
+        <p style="color: var(--gray); margin-bottom: 2rem">
+          Data will be saved to MongoDB
+        </p>
+
+        <form id="worker-form" onsubmit="registerWorker(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Full Name *</label
+              ><input type="text" name="name" required />
+            </div>
+            <div class="form-group">
+              <label>Phone Number *</label
+              ><input type="tel" name="phone" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email Address *</label
+            ><input type="email" name="email" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Service Category *</label>
+              <select name="serviceCategory" required>
+                <option value="">Select service</option>
+                <option value="electrician">Electrician</option>
+                <option value="plumber">Plumber</option>
+                <option value="carpenter">Carpenter</option>
+                <option value="painter">Painter</option>
+                <option value="mechanic">Mechanic</option>
+                <option value="cleaner">Cleaner</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Years of Experience *</label
+              ><input type="number" name="yearsOfExperience" min="0" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Associated Association *</label
+            ><input
+              type="text"
+              name="association"
+              required
+              placeholder="Association name"
+            />
+          </div>
+          <div class="form-group">
+            <label>Service Areas *</label
+            ><input
+              type="text"
+              name="serviceAreas"
+              required
+              placeholder="e.g., Mumbai, Thane"
+            />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Latitude *</label
+              ><input type="number" step="0.000001" name="latitude" required />
+            </div>
+            <div class="form-group">
+              <label>Longitude *</label
+              ><input type="number" step="0.000001" name="longitude" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Hourly Rate (₹) *</label
+            ><input type="number" name="hourlyRate" min="100" required />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-accent"
+            style="width: 100%"
+            id="worker-submit-btn"
+          >
+            <i class="fas fa-user-check"></i> Register as Worker
+          </button>
+        </form>
+
+        <div id="worker-success" class="success-message">
+          <i class="fas fa-check-circle"></i>
+          <h3>Registration Successful!</h3>
+          <p>Saved to MongoDB</p>
+        </div>
+        <div id="worker-error" class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <h3>Registration Failed</h3>
+          <p id="worker-error-msg"></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="assignment-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-handshake"></i> Assign Worker</h3>
+          <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="assignment-form">
+          <div class="form-group">
+            <label>Selected Worker</label
+            ><input type="text" id="selected-worker-name" readonly />
+          </div>
+          <div class="form-group">
+            <label>Your Name *</label><input type="text" id="customer-name" />
+          </div>
+          <div class="form-group">
+            <label>Phone Number *</label
+            ><input type="tel" id="customer-phone" />
+          </div>
+          <div class="form-group">
+            <label>Service Address *</label
+            ><textarea id="service-address" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Job Description *</label
+            ><textarea id="job-description" rows="3"></textarea>
+          </div>
+          <button
+            class="btn btn-primary"
+            onclick="confirmAssignment()"
+            id="assign-btn"
+          >
+            <i class="fas fa-check"></i> Confirm Assignment
+          </button>
+        </div>
+        <div id="assignment-success" class="success-message">
+          <i class="fas fa-check-circle"></i>
+          <h3>Worker Assigned!</h3>
+          <p id="assignment-details"></p>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      const API_BASE_URL = "http://localhost:5000/api";
+      const cityCoordinates = {
+        delhi: { lat: 28.6139, lng: 77.209, zoom: 11 },
+        mumbai: { lat: 19.076, lng: 72.8777, zoom: 11 },
+        bangalore: { lat: 12.9716, lng: 77.5946, zoom: 11 },
+        noida: { lat: 28.5355, lng: 77.391, zoom: 12 },
+        chennai: { lat: 13.0827, lng: 80.2707, zoom: 11 },
+        pune: { lat: 18.5204, lng: 73.8567, zoom: 11 },
+        hyderabad: { lat: 17.385, lng: 78.4867, zoom: 11 },
+      };
+
+      const serviceIcons = {
+        electrician: "⚡",
+        plumber: "🚰",
+        carpenter: "🔨",
+        painter: "🎨",
+        mechanic: "🔧",
+        cleaner: "🧹",
+      };
+      let map,
+        markers = [],
+        selectedService = null,
+        selectedWorker = null,
+        allWorkers = [];
+
+      function initMap() {
+        map = L.map("map").setView([20.5937, 78.9629], 5);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "Map data © OpenStreetMap",
+        }).addTo(map);
+      }
+
+      async function loadStats() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/stats`);
+          const result = await response.json();
+          if (result.success) {
+            document.getElementById("total-workers").textContent =
+              result.data.totalWorkers;
+            document.getElementById("total-associations").textContent =
+              result.data.totalAssociations;
+            document.getElementById("completed-jobs").textContent =
+              result.data.completedJobs.toLocaleString();
+            document.getElementById("happy-customers").textContent =
+              result.data.satisfactionRate + "%";
+          }
+        } catch (error) {
+          console.error("Error loading stats:", error);
+        }
+      }
+
+      async function loadWorkers() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/workers`);
+          const result = await response.json();
+          if (result.success) {
+            allWorkers = result.data.map((w) => ({
+              id: w._id,
+              name: w.name,
+              service: w.serviceCategory,
+              association: w.association,
+              rating: w.rating || 4.5,
+              jobs: w.jobsCompleted || 0,
+              lat: w.latitude,
+              lng: w.longitude,
+              status: "available",
+              hourlyRate: w.hourlyRate,
+              city: w.serviceAreas.split(",")[0].trim(),
+            }));
+          }
+        } catch (error) {
+          console.error("Error loading workers:", error);
+        }
+      }
+
+      function addWorkerMarker(worker) {
+        const icon = L.divIcon({
+          html: `<div style="font-size: 24px; text-align: center;">${serviceIcons[worker.service]}</div>`,
+          className: "custom-marker",
+          iconSize: [30, 30],
+        });
+        const marker = L.marker([worker.lat, worker.lng], { icon })
+          .addTo(map)
+          .bindPopup(
+            `<strong>${worker.name}</strong><br>${worker.service}<br>₹${worker.hourlyRate}/hr<br>${worker.city}`,
+          );
+        markers.push(marker);
+      }
+
+      function clearMarkers() {
+        markers.forEach((marker) => map.removeLayer(marker));
+        markers = [];
+      }
+
+      function selectService(service) {
+        selectedService = service;
+        document
+          .querySelectorAll(".service-card")
+          .forEach((card) => card.classList.remove("selected"));
+        document
+          .querySelector(`[data-service="${service}"]`)
+          .classList.add("selected");
+      }
+
+      async function findWorkers() {
+        const location = document.getElementById("location-input").value;
+        if (!selectedService) {
+          alert("Please select a service first!");
+          return;
+        }
+        if (!location) {
+          alert("Please enter your location!");
+          return;
+        }
+
+        const geocoded = cityCoordinates[location.toLowerCase().trim()];
+        if (!geocoded) {
+          alert(
+            "Location not found. Try: Delhi, Mumbai, Bangalore, Noida, Chennai, Pune, Hyderabad",
+          );
+          return;
+        }
+
+        map.setView([geocoded.lat, geocoded.lng], geocoded.zoom);
+        document.getElementById("location-badge").classList.add("active");
+        document.getElementById("current-location").textContent = location;
+
+        const filteredWorkers = allWorkers.filter(
+          (w) =>
+            w.service === selectedService &&
+            w.city.toLowerCase().includes(location.toLowerCase()),
+        );
+        clearMarkers();
+        (filteredWorkers.length > 0
+          ? filteredWorkers
+          : allWorkers.filter((w) => w.service === selectedService)
+        ).forEach((worker) => addWorkerMarker(worker));
+        displayWorkers(
+          filteredWorkers.length > 0
+            ? filteredWorkers
+            : allWorkers.filter((w) => w.service === selectedService),
+        );
+      }
+
+      function displayWorkers(workersList) {
+        const workersListEl = document.getElementById("workers-list");
+        if (workersList.length === 0) {
+          workersListEl.innerHTML =
+            '<p style="color: var(--gray); text-align: center; padding: 2rem;">No workers found</p>';
+          return;
+        }
+        workersListEl.innerHTML = workersList
+          .map(
+            (worker) => `
+                <div class="worker-card" onclick="selectWorker('${worker.id}')">
+                    <div class="worker-header"><span class="worker-name">${worker.name}</span><span class="worker-rating">★ ${worker.rating}</span></div>
+                    <div class="worker-details">${serviceIcons[worker.service]} ${worker.service} • ${worker.jobs} jobs</div>
+                    <div class="worker-association">${worker.association}</div>
+                    <div class="worker-status"><div class="status-dot"></div><span>Available</span><span style="margin-left: auto; font-weight: bold;">₹${worker.hourlyRate}/hr</span></div>
+                    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--primary);"><i class="fas fa-map-marker-alt"></i> ${worker.city}</div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      function selectWorker(workerId) {
+        selectedWorker = allWorkers.find((w) => w.id === workerId);
+        document.getElementById("selected-worker-name").value =
+          selectedWorker.name;
+        document.getElementById("assignment-modal").classList.add("active");
+      }
+
+      function closeModal() {
+        document.getElementById("assignment-modal").classList.remove("active");
+        document
+          .getElementById("assignment-success")
+          .classList.remove("active");
+      }
+
+      async function confirmAssignment() {
+        const customerName = document.getElementById("customer-name").value;
+        const customerPhone = document.getElementById("customer-phone").value;
+        const serviceAddress = document.getElementById("service-address").value;
+        const jobDescription = document.getElementById("job-description").value;
+
+        if (
+          !customerName ||
+          !customerPhone ||
+          !serviceAddress ||
+          !jobDescription
+        ) {
+          alert("Please fill all fields!");
+          return;
+        }
+
+        const assignBtn = document.getElementById("assign-btn");
+        assignBtn.disabled = true;
+        assignBtn.innerHTML = '<span class="spinner"></span> Assigning...';
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/jobs`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              workerId: selectedWorker.id,
+              workerName: selectedWorker.name,
+              customerName,
+              customerPhone,
+              serviceAddress,
+              jobDescription,
+            }),
+          });
+          const result = await response.json();
+          if (result.success) {
+            document
+              .getElementById("assignment-success")
+              .classList.add("active");
+            document.getElementById("assignment-details").innerHTML =
+              `<strong>Worker:</strong> ${selectedWorker.name}<br><strong>Job:</strong> ${jobDescription}<br>Saved to MongoDB!`;
+            setTimeout(() => {
+              closeModal();
+              loadStats();
+            }, 3000);
+          }
+        } catch (error) {
+          alert("Error: Make sure backend is running on port 5000");
+        } finally {
+          assignBtn.disabled = false;
+          assignBtn.innerHTML =
+            '<i class="fas fa-check"></i> Confirm Assignment';
+        }
+      }
+
+      async function registerAssociation(event) {
+        event.preventDefault();
+        const form = event.target;
+        const submitBtn = document.getElementById("assoc-submit-btn");
+        submitBtn.disabled = true;
+        submitBtn.innerHTML =
+          '<span class="spinner"></span> Saving to MongoDB...';
+
+        const formData = {
+          name: form.name.value,
+          registrationNumber: form.registrationNumber.value,
+          contactPerson: form.contactPerson.value,
+          phone: form.phone.value,
+          email: form.email.value,
+          address: form.address.value,
+          city: form.city.value,
+          state: form.state.value,
+          workerCategories: [],
+        };
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/associations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          });
+          const result = await response.json();
+          if (result.success) {
+            document
+              .getElementById("association-success")
+              .classList.add("active");
+            form.reset();
+            loadStats();
+            setTimeout(() => {
+              document
+                .getElementById("association-success")
+                .classList.remove("active");
+              showSection("home");
+            }, 3000);
+          } else {
+            throw new Error(result.message);
+          }
+        } catch (error) {
+          document.getElementById("association-error").classList.add("active");
+          document.getElementById("association-error-msg").textContent =
+            error.message || "Failed to connect to backend";
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML =
+            '<i class="fas fa-check"></i> Register Association';
+        }
+      }
+
+      async function registerWorker(event) {
+        event.preventDefault();
+        const form = event.target;
+        const submitBtn = document.getElementById("worker-submit-btn");
+        submitBtn.disabled = true;
+        submitBtn.innerHTML =
+          '<span class="spinner"></span> Saving to MongoDB...';
+
+        const formData = {
+          name: form.name.value,
+          phone: form.phone.value,
+          email: form.email.value,
+          serviceCategory: form.serviceCategory.value,
+          yearsOfExperience: parseInt(form.yearsOfExperience.value),
+          association: form.association.value,
+          serviceAreas: form.serviceAreas.value,
+          latitude: parseFloat(form.latitude.value),
+          longitude: parseFloat(form.longitude.value),
+          hourlyRate: parseInt(form.hourlyRate.value),
+          skills: "",
+        };
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/workers`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          });
+          const result = await response.json();
+          if (result.success) {
+            document.getElementById("worker-success").classList.add("active");
+            form.reset();
+            loadStats();
+            loadWorkers();
+            setTimeout(() => {
+              document
+                .getElementById("worker-success")
+                .classList.remove("active");
+              showSection("home");
+            }, 3000);
+          } else {
+            throw new Error(result.message);
+          }
+        } catch (error) {
+          document.getElementById("worker-error").classList.add("active");
+          document.getElementById("worker-error-msg").textContent =
+            error.message || "Failed to connect to backend";
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML =
+            '<i class="fas fa-user-check"></i> Register as Worker';
+        }
+      }
+
+      function showSection(section) {
+        document.getElementById("home-section").style.display = "none";
+        document
+          .getElementById("register-association-section")
+          .classList.remove("active");
+        document
+          .getElementById("register-worker-section")
+          .classList.remove("active");
+
+        if (section === "home") {
+          document.getElementById("home-section").style.display = "block";
+          setTimeout(() => {
+            initMap();
+            loadStats();
+            loadWorkers();
+          }, 100);
+        } else if (section === "register-association") {
+          document
+            .getElementById("register-association-section")
+            .classList.add("active");
+        } else if (section === "register-worker") {
+          document
+            .getElementById("register-worker-section")
+            .classList.add("active");
+        }
+      }
+
+      window.addEventListener("load", () => {
+        initMap();
+        loadStats();
+        loadWorkers();
+      });
+    </script>
+  </body>
+</html>
