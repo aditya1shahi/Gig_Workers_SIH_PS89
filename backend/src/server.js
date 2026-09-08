@@ -42,10 +42,7 @@ const authMiddleware = async (req, res, next) => {
         .status(401)
         .json({ success: false, message: "No token provided" });
     }
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "gigworker",
-    );
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "gigworker");
     req.user = decoded;
     next();
   } catch (error) {
