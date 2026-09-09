@@ -938,7 +938,7 @@
         const filteredWorkers = allWorkers.filter(
           (w) =>
             w.service === selectedService &&
-            w.city.toLowerCase().includes(location.toLowerCase()),
+            w.city.toLowerCase(),
         );
         clearMarkers();
         (filteredWorkers.length > 0
