@@ -867,12 +867,29 @@
       }
 
       function addWorkerMarker(worker) {
+        let lat = worker.lat;
+        let lng = worker.lng;
+
+        // Fallback: no coordinates on record — try to center on their city instead
+        if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) {
+          const cityKey = (worker.city || "").toLowerCase().trim();
+          const cityCoords = cityCoordinates[cityKey];
+          if (cityCoords) {
+            lat = cityCoords.lat;
+            lng = cityCoords.lng;
+          } else {
+            // Unknown city and no coordinates — skip the map pin,
+            // worker still appears in the side panel list
+            return;
+          }
+        }
+
         const icon = L.divIcon({
           html: `<div style="font-size: 24px; text-align: center;">${serviceIcons[worker.service]}</div>`,
           className: "custom-marker",
           iconSize: [30, 30],
         });
-        const marker = L.marker([worker.lat, worker.lng], { icon })
+        const marker = L.marker([lat, lng], { icon })
           .addTo(map)
           .bindPopup(
             `<strong>${worker.name}</strong><br>${worker.service}<br>₹${worker.hourlyRate}/hr<br>${worker.city}`,
@@ -1094,7 +1111,7 @@
           yearsOfExperience: parseInt(form.yearsOfExperience.value),
           association: form.association.value,
           serviceAreas: form.serviceAreas.value,
-          govtID: form.govtID.value, 
+          govtID: form.govtID.value,
           hourlyRate: parseInt(form.hourlyRate.value),
           skills: "",
         };
