@@ -855,8 +855,8 @@
               rating: w.rating || 4.5,
               jobs: w.jobsCompleted || 0,
               lat: w.latitude,
-              // lng: w.longitude,
-              // status: "available",
+              lng: w.longitude,
+              status: "available",
               hourlyRate: w.hourlyRate,
               city: w.serviceAreas.split(",")[0].trim(),
             }));
@@ -1094,7 +1094,7 @@
           yearsOfExperience: parseInt(form.yearsOfExperience.value),
           association: form.association.value,
           serviceAreas: form.serviceAreas.value,
-          govtID: form.govtID.value,
+          govtID: form.govtID.value, 
           hourlyRate: parseInt(form.hourlyRate.value),
           skills: "",
         };
