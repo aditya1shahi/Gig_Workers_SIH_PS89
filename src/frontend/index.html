@@ -858,7 +858,7 @@
               lng: w.longitude,
               status: "available",
               hourlyRate: w.hourlyRate,
-              city: w.serviceAreas.split(",")[0].trim(),
+              city: w.serviceAreas.split(",")[0].trim() || "",
             }));
           }
         } catch (error) {
@@ -938,7 +938,7 @@
         const filteredWorkers = allWorkers.filter(
           (w) =>
             w.service === selectedService &&
-            w.city.toLowerCase(),
+            w.city.toLowerCase().includes(location),
         );
         clearMarkers();
         (filteredWorkers.length > 0
