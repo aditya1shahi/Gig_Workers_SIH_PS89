@@ -9,8 +9,8 @@ const workerSchema = new mongoose.Schema(
     yearsOfExperience: { type: Number, required: true },
     association: { type: String, required: false },
     serviceAreas: { type: String, required: true },
-    latitude: { type: Number, required: false },
-    longitude: { type: Number, required: false },
+    // latitude: { type: Number, required: false },
+    // longitude: { type: Number, required: false },
     hourlyRate: { type: Number, required: true },
     skills: { type: String, default: "" },
     status: { type: String, default: "approved" }, // pending, approved, rejected
