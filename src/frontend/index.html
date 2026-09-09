@@ -703,13 +703,17 @@
             />
           </div>
           <div class="form-group">
-            <label>Service Areas *</label
-            ><input
-              type="text"
-              name="serviceAreas"
-              required
-              placeholder="e.g., Mumbai, Thane"
-            />
+            <label>Service Area *</label>
+            <select name="serviceAreas" id="service-areas-select" required>
+              <option value="">Select city</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Bangalore">Bangalore</option>
+              <option value="Noida">Noida</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Pune">Pune</option>
+              <option value="Hyderabad">Hyderabad</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Government ID Number *</label
@@ -816,6 +820,18 @@
         selectedWorker = null,
         allWorkers = [];
 
+      function geocodeFromServiceAreas(serviceAreasStr) {
+        const tokens = serviceAreasStr
+          .split(",")
+          .map((t) => t.trim().toLowerCase());
+        for (const t of tokens) {
+          if (cityCoordinates[t]) {
+            return { lat: cityCoordinates[t].lat, lng: cityCoordinates[t].lng };
+          }
+        }
+        return null;
+      }
+
       function initMap() {
         map = L.map("map").setView([20.5937, 78.9629], 5);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -858,7 +874,7 @@
               lng: w.longitude,
               status: "available",
               hourlyRate: w.hourlyRate,
-              city: w.serviceAreas.split(",")[0].trim() || "",
+              city: (w.serviceAreas || "").split(",")[0]?.trim() || "",
             }));
           }
         } catch (error) {
@@ -938,13 +954,16 @@
         const filteredWorkers = allWorkers.filter(
           (w) =>
             w.service === selectedService &&
-            w.city.toLowerCase().includes(location),
+            w.lat === geocoded.lat &&
+            w.lng === geocoded.lng,
         );
+
         clearMarkers();
         (filteredWorkers.length > 0
           ? filteredWorkers
           : allWorkers.filter((w) => w.service === selectedService)
         ).forEach((worker) => addWorkerMarker(worker));
+
         displayWorkers(
           filteredWorkers.length > 0
             ? filteredWorkers
@@ -952,6 +971,7 @@
         );
       }
 
+      
       function displayWorkers(workersList) {
         const workersListEl = document.getElementById("workers-list");
         if (workersList.length === 0) {
@@ -1115,6 +1135,12 @@
           hourlyRate: parseInt(form.hourlyRate.value),
           skills: "",
         };
+
+        const geo = geocodeFromServiceAreas(formData.serviceAreas);
+        if (geo) {
+          formData.latitude = geo.lat;
+          formData.longitude = geo.lng;
+        }
 
         try {
           const response = await fetch(`${API_BASE_URL}/workers`, {

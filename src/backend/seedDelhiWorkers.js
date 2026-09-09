@@ -11,7 +11,7 @@ async function seedWorkers() {
     for (const worker of delhiWorkers) {
       await Worker.updateOne(
         { email: worker.email },
-        { $setOnInsert: worker },
+        { $set: worker },
         { upsert: true },
       );
     }
