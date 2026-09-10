@@ -591,9 +591,7 @@
 
       <div id="register-association-section" class="registration-section">
         <h2><i class="fas fa-building"></i> Register Your Association</h2>
-        <p style="color: var(--gray); margin-bottom: 2rem">
-          
-        </p>
+        <p style="color: var(--gray); margin-bottom: 2rem"></p>
 
         <form id="association-form" onsubmit="registerAssociation(event)">
           <div class="form-row">
@@ -657,7 +655,7 @@
       <div id="register-worker-section" class="registration-section">
         <h2><i class="fas fa-user-plus"></i> Register as a Worker</h2>
         <!-- <p style="color: var(--gray); margin-bottom: 2rem"> -->
-          <!-- Data will be saved to MongoDB -->
+        <!-- Data will be saved to MongoDB -->
         <!-- </p> -->
 
         <form id="worker-form" onsubmit="registerWorker(event)">
@@ -866,6 +864,7 @@
             allWorkers = result.data.map((w) => ({
               id: w._id,
               name: w.name,
+              phone: w.phone,
               service: w.serviceCategory,
               association: w.association,
               rating: w.rating || 4.5,
@@ -971,7 +970,6 @@
         );
       }
 
-      
       function displayWorkers(workersList) {
         const workersListEl = document.getElementById("workers-list");
         if (workersList.length === 0) {
@@ -1035,6 +1033,8 @@
             body: JSON.stringify({
               workerId: selectedWorker.id,
               workerName: selectedWorker.name,
+              workerPhone: selectedWorker.phone,
+              serviceCategory: selectedWorker.service,
               customerName,
               customerPhone,
               serviceAddress,
@@ -1052,6 +1052,8 @@
               closeModal();
               loadStats();
             }, 3000);
+          } else {
+            alert(result.message || "Assignment failed — please try again.");
           }
         } catch (error) {
           alert("Error: Make sure backend is running on port 5000");
@@ -1067,8 +1069,7 @@
         const form = event.target;
         const submitBtn = document.getElementById("assoc-submit-btn");
         submitBtn.disabled = true;
-        submitBtn.innerHTML =
-          '<span class="spinner"></span> Saving Data...';
+        submitBtn.innerHTML = '<span class="spinner"></span> Saving Data...';
 
         const formData = {
           name: form.name.value,
@@ -1120,8 +1121,7 @@
         const form = event.target;
         const submitBtn = document.getElementById("worker-submit-btn");
         submitBtn.disabled = true;
-        submitBtn.innerHTML =
-          '<span class="spinner"></span> Saving Data...';
+        submitBtn.innerHTML = '<span class="spinner"></span> Saving Data...';
 
         const formData = {
           name: form.name.value,
